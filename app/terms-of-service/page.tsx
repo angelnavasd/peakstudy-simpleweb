@@ -19,7 +19,7 @@ export default function TermsOfService() {
 
             <h2>1. Acceptance of Terms</h2>
             <p>
-              By downloading, installing, or using Peak Study AI ("the App", "we", "us"), you agree to be bound by these Terms of Service and our Privacy Policy.
+              By downloading, installing, or using Peak Study AI (&ldquo;the App&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;), you agree to be bound by these Terms of Service and our Privacy Policy.
               If you do not agree, do not use the App.
               These Terms apply to all users of the App, whether free or paid.
             </p>
@@ -129,7 +129,7 @@ export default function TermsOfService() {
               To the maximum extent permitted by law:
             </p>
             <ul>
-              <li>The App is provided "AS IS" and "AS AVAILABLE".</li>
+              <li>The App is provided &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo;.</li>
               <li>We do not guarantee uninterrupted service or accuracy of AI-generated outputs.</li>
               <li>We are not liable for any direct, indirect, incidental, or consequential damages arising from the use of the App.</li>
             </ul>
