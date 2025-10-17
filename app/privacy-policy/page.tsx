@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
 
             <h2>1. Introduction</h2>
             <p>
-              Peak Study AI ("we", "our", or "the App") provides tools to convert audio, video, PDF, and text into study materials (summaries, quizzes, flashcards) and to interact with an AI study assistant. This Privacy Policy explains what information we collect, how we use it, how we share it, and the choices you have.
+              Peak Study AI (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;the App&rdquo;) provides tools to convert audio, video, PDF, and text into study materials (summaries, quizzes, flashcards) and to interact with an AI study assistant. This Privacy Policy explains what information we collect, how we use it, how we share it, and the choices you have.
             </p>
 
             <hr className="my-6 border-border" />
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
 
             <h3>b) User-Provided Inputs</h3>
             <ul>
-              <li><strong>What:</strong> The audio, text, PDF, or video files you upload or record, and the raw text you paste into the app (the "Inputs").</li>
+              <li><strong>What:</strong> The audio, text, PDF, or video files you upload or record, and the raw text you paste into the app (the &ldquo;Inputs&rdquo;).</li>
               <li><strong>Why:</strong> To process and generate study materials and provide the chat/AI experience.</li>
               <li><strong>Retention:</strong> Generated outputs based on these inputs may be stored per your account; raw prompts are not stored persistently (see below).</li>
             </ul>
