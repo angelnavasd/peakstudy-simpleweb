@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/auth-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PeakstudyAI - Your AI-Powered Study Copilot",
-  description: "From chaotic recordings to perfect notes. Turn your classes into smart flashcards, clear summaries, and proven retention systems.",
+  title: "Peak Study AI - Your AI-Powered Study Copilot",
+  description: "Transform your content into intelligent learning materials with AI-powered flashcards, summaries, and interactive quizzes.",
 };
 
 export default function RootLayout({
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
