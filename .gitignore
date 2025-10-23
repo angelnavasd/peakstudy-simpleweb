@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# markdown files in root
-*.md
+# local markdown files
+PEAK_STUDY_AI_WEB_INTEGRATION.md
