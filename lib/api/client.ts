@@ -10,6 +10,7 @@ class ApiClient {
   private instance: AxiosInstance
 
   constructor(config: ApiConfig) {
+    console.log('🔗 API Client initialized with baseURL:', config.baseURL)
     this.instance = axios.create(config)
     this.setupInterceptors()
   }
@@ -18,23 +19,30 @@ class ApiClient {
     // Request interceptor para añadir token de autenticación
     this.instance.interceptors.request.use(
       async (config) => {
+        console.log('🚀 Making request to:', config.method?.toUpperCase(), config.url)
         const supabase = createClient()
         const { data: { session } } = await supabase.auth.getSession()
 
         if (session?.access_token) {
           config.headers.Authorization = `Bearer ${session.access_token}`
+          console.log('✅ Auth token added to request')
+        } else {
+          console.log('❌ No auth session found')
         }
 
         return config
       },
       (error) => {
+        console.error('❌ Request interceptor error:', error)
         return Promise.reject(error)
       }
     )
 
     // Response interceptor para manejar errores y refresh de token
     this.instance.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        return response
+      },
       async (error: AxiosError) => {
         const originalRequest = error.config
 
@@ -80,6 +88,6 @@ class ApiClient {
 
 // Exportar instancia configurada
 export const apiClient = new ApiClient({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://notesapp-backend-production-b515.up.railway.app/api',
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL!,
   timeout: 30000,
 })

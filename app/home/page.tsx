@@ -6,24 +6,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
+import { SessionList } from "@/components/sessions/session-list"
+import { SessionView } from "@/components/sessions/session-view"
+import { QuizView } from "@/components/transforms/quiz-view"
 import {
   BookOpen,
   Brain,
   Zap,
   Upload,
   FileText,
-  MessageSquare,
   Settings,
   LogOut,
   Home,
   BarChart3,
-  Clock
+  Clock,
+  HelpCircle,
+  Layers,
+  MessageSquare as MessageSquareIcon
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState, useCallback, memo } from 'react'
 
 export default function HomePage() {
   const { user, signOut } = useAuth()
   const router = useRouter()
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+  const [currentSessionTitle, setCurrentSessionTitle] = useState<string | null>(null)
+  const [currentView, setCurrentView] = useState<'session' | 'quiz' | 'chat' | 'flashcards'>('session')
+  const [quizInfo, setQuizInfo] = useState<{ currentQuestion: number; totalQuestions: number; score?: number } | null>(null)
+  const [quizState, setQuizState] = useState<{
+    currentQuestionIndex: number
+    selectedOption: number | null
+    showFeedback: boolean
+    isCorrect: boolean
+    quizResult: QuizResult | null
+  } | null>(null)
 
   const menuItems = [
     { icon: Home, label: 'Home', href: '/home' },
@@ -38,6 +55,40 @@ export default function HomePage() {
     { icon: Brain, label: 'AI Suggestions' },
     { icon: Zap, label: 'Quick Actions' },
   ]
+
+  const handleSessionClick = (sessionId: string) => {
+    setCurrentSessionId(sessionId)
+    setCurrentSessionTitle(null) // Will be set when session loads
+    setCurrentView('session')
+    setQuizInfo(null)
+  }
+
+  const handleBackToHome = () => {
+    setCurrentSessionId(null)
+    setCurrentSessionTitle(null)
+    setCurrentView('session')
+    setQuizInfo(null)
+  }
+
+  const handleBackToSession = () => {
+    setCurrentView('session')
+    setQuizInfo(null)
+  }
+
+  const handleSessionTitleUpdate = (title: string) => {
+    setCurrentSessionTitle(title)
+  }
+
+  const handleQuizClick = () => {
+    if (currentSessionId) {
+      setCurrentView('quiz')
+      setQuizInfo(null) // Will be set when quiz loads
+    }
+  }
+
+  const handleQuizInfoUpdate = useCallback((info: { currentQuestion: number; totalQuestions: number; score?: number }) => {
+    setQuizInfo(info)
+  }, [])
 
   return (
     <div className="flex h-screen bg-background">
@@ -135,157 +186,301 @@ export default function HomePage() {
       {/* Main Content Area */}
       <div className="flex-1 flex">
         {/* Center Content */}
-        <div className="flex-1 p-6 overflow-auto">
-          <div className="max-w-4xl mx-auto">
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-              <p className="text-muted-foreground">Ready to transform your content into intelligent learning materials?</p>
-            </div>
+        <div className="flex-1 overflow-hidden">
+          {currentSessionId ? (
+            currentView === 'quiz' ? (
+              <QuizView
+                key={`quiz-${currentSessionId}`}
+                sessionId={currentSessionId}
+                sessionTitle={currentSessionTitle || undefined}
+                onBack={handleBackToSession}
+                onQuizInfoUpdate={handleQuizInfoUpdate}
+              />
+            ) : (
+              <SessionView
+                key={`session-${currentSessionId}`}
+                sessionId={currentSessionId}
+                onBack={handleBackToHome}
+                onTitleUpdate={handleSessionTitleUpdate}
+              />
+            )
+          ) : (
+            <div className="p-6 overflow-auto h-full">
+              <div className="max-w-4xl mx-auto">
+                {/* Welcome Section */}
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
+                  <p className="text-muted-foreground">Ready to transform your content into intelligent learning materials?</p>
+                </div>
 
-            {/* Quick Actions */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/upload')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5 text-primary" />
-                    Upload Content
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Upload videos, audio, PDFs, or text to start learning
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Quick Actions */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/upload')}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Upload className="h-5 w-5 text-primary" />
+                        Upload Content
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Upload videos, audio, PDFs, or text to start learning
+                      </p>
+                    </CardContent>
+                  </Card>
 
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Study Sessions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Continue your latest learning sessions
-                  </p>
-                </CardContent>
-              </Card>
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-primary" />
+                        Study Sessions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Continue your latest learning sessions
+                      </p>
+                    </CardContent>
+                  </Card>
 
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-primary" />
-                    AI Assistant
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Get help from your AI learning assistant
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-primary" />
+                        AI Assistant
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Get help from your AI learning assistant
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
 
-            {/* Recent Sessions */}
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Recent Sessions</h2>
-              <div className="space-y-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">Machine Learning Basics</h3>
-                        <p className="text-sm text-muted-foreground">Started 2 hours ago</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Continue
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">Web Development Course</h3>
-                        <p className="text-sm text-muted-foreground">Started yesterday</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Continue
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Recent Sessions */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold">Recent Sessions</h2>
+                    <Button variant="outline" onClick={() => router.push('/sessions')}>
+                      View All
+                    </Button>
+                  </div>
+                  <SessionList onSessionClick={handleSessionClick} />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right Sidebar - Contextual Info */}
         <div className="w-64 border-l bg-card/50 p-6">
           <div className="space-y-6">
-            {/* Recent Activity */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Recent Activity
-              </h3>
-              <div className="space-y-3">
-                <div className="text-sm">
-                  <p className="font-medium">Completed flashcards</p>
-                  <p className="text-muted-foreground">ML Basics • 30 min ago</p>
+            {currentSessionId ? (
+              /* Session-specific sidebar */
+              <>
+                {/* AI Transformations */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Brain className="h-4 w-4" />
+                    AI Transformations
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start">
+                      <MessageSquareIcon className="h-4 w-4 mr-2" />
+                      Chat AI
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" onClick={handleQuizClick}>
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      Quiz
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Layers className="h-4 w-4 mr-2" />
+                      Flashcards
+                    </Button>
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <p className="font-medium">Uploaded new document</p>
-                  <p className="text-muted-foreground">React Tutorial • 2 hours ago</p>
+
+                <Separator />
+
+                {/* Session/Quiz Info */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    {currentView === 'quiz' ? (
+                      <>
+                        <HelpCircle className="h-4 w-4" />
+                        Quiz Info
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="h-4 w-4" />
+                        Session Info
+                      </>
+                    )}
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {currentView === 'quiz' ? (
+                      <>
+                        {/* Quiz-specific info */}
+                        <div>
+                          <p className="font-medium">Quiz Title</p>
+                          <p className="text-muted-foreground text-xs truncate">
+                            Quiz sobre {currentSessionTitle || 'este tema'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Session ID</p>
+                          <p className="text-muted-foreground text-xs font-mono">
+                            {currentSessionId.slice(0, 8)}...
+                          </p>
+                        </div>
+                        {quizInfo && (
+                          <>
+                            <div>
+                              <p className="font-medium">Progress</p>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                                  <div
+                                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                    style={{
+                                      width: `${(quizInfo.currentQuestion / quizInfo.totalQuestions) * 100}%`
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-muted-foreground text-xs">
+                                  {quizInfo.currentQuestion}/{quizInfo.totalQuestions}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="font-medium">Current Score</p>
+                              <p className="text-muted-foreground text-xs">
+                                {quizInfo.score || 0} points
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium">Accuracy</p>
+                              <p className="text-muted-foreground text-xs">
+                                {quizInfo.score && quizInfo.currentQuestion > 0
+                                  ? `${Math.round((quizInfo.score / quizInfo.currentQuestion) * 100)}%`
+                                  : '0%'
+                                }
+                              </p>
+                            </div>
+                          </>
+                        )}
+                        <div>
+                          <p className="font-medium">Questions Remaining</p>
+                          <p className="text-muted-foreground text-xs">
+                            {quizInfo ? quizInfo.totalQuestions - quizInfo.currentQuestion : 'N/A'}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Session-specific info */}
+                        <div>
+                          <p className="font-medium">Session ID</p>
+                          <p className="text-muted-foreground text-xs font-mono">
+                            {currentSessionId.slice(0, 8)}...
+                          </p>
+                        </div>
+                        {currentSessionTitle && (
+                          <div>
+                            <p className="font-medium">Title</p>
+                            <p className="text-muted-foreground text-xs truncate">
+                              {currentSessionTitle}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <Separator />
+                <Separator />
 
-            {/* AI Suggestions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Brain className="h-4 w-4" />
-                AI Suggestions
-              </h3>
-              <div className="space-y-3">
-                <Card className="p-3">
-                  <p className="text-sm">
-                    Review your Machine Learning flashcards - you're 85% ready!
-                  </p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-sm">
-                    Try uploading a video for better engagement
-                  </p>
-                </Card>
-              </div>
-            </div>
+                {/* Quick Actions */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Quick Actions
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      Share
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Home sidebar */
+              <>
+                {/* Recent Activity */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Recent Activity
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="text-sm">
+                      <p className="font-medium">Completed flashcards</p>
+                      <p className="text-muted-foreground">ML Basics • 30 min ago</p>
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium">Uploaded new document</p>
+                      <p className="text-muted-foreground">React Tutorial • 2 hours ago</p>
+                    </div>
+                  </div>
+                </div>
 
-            <Separator />
+                <Separator />
 
-            {/* Quick Actions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                Quick Actions
-              </h3>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Chat with AI
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Create Summary
-                </Button>
-              </div>
-            </div>
+                {/* AI Suggestions */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Brain className="h-4 w-4" />
+                    AI Suggestions
+                  </h3>
+                  <div className="space-y-3">
+                    <Card className="p-3">
+                      <p className="text-sm">
+                        Review your Machine Learning flashcards - you're 85% ready!
+                      </p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-sm">
+                        Try uploading a video for better engagement
+                      </p>
+                    </Card>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Quick Actions */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Quick Actions
+                  </h3>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start">
+                      <MessageSquareIcon className="h-4 w-4 mr-2" />
+                      Chat with AI
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Create Summary
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
